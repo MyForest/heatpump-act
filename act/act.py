@@ -16,6 +16,7 @@ from act.last_time_stamp import LastTimeStamp
 class Act:
     def __init__(self) -> None:
         self.__configure__logging()
+        self.__logger = logger = structlog.get_logger(self.__class__.__name__)
 
     def __configure__logging(self):
 
@@ -63,15 +64,30 @@ class Act:
         local_dt = local_time_zone.localize(calculation_moment_datetime)
 
         with structlog.contextvars.bound_contextvars(calculation_moment=local_dt.isoformat()):
-            logger = structlog.get_logger(self.__class__.__name__)
-            logger.info(f"Running as though it is {local_dt}")
-            if dry_run:
-                logger.debug("Using dry run so will not send commands to heat pump")
 
-            deviceInfos = list(self.__getLatestDeviceInfos(local_dt))
-            deviceInfos.reverse()
-            if deviceInfos:
-                logger.debug("Latest device info", reading_timestamp=LastTimeStamp.lastTimeStampInUTC(deviceInfos[-1]).isoformat())
+            self.__logger.info(f"Calculation moment is {local_dt}")
+            if dry_run:
+                self.__logger.debug("Using dry run so will not send commands to heat pump")
+
+            device_infos = list(self.__getLatestDeviceInfos(local_dt))
+            device_infos.reverse()
+            if len(device_infos) == 0:
+                self.__logger.exception("No device information files were found")
+
+            now = datetime.datetime.utcnow()
+            utc = pytz.timezone("UTC")
+            utc_now = utc.localize(now)
+
+            if (utc_now - local_dt).total_seconds() > 59:
+                logging.debug("Older runs would not have had access to the very latest device info when they ran")
+                device_infos = device_infos[:-1]
+
+            self.describe_device_infos_being_operated_on(device_infos)
+
+    def describe_device_infos_being_operated_on(self, device_infos):
+        self.__logger.debug(
+            f"Operating on {len(device_infos)} device infos. The newest of which has a last time stamp of {LastTimeStamp.lastTimeStampInUTC(device_infos[-1]).isoformat()}"
+        )
 
     def __getLatestDeviceInfos(self, calculationMoment: datetime.datetime) -> Generator[DeviceInfo, None, None]:
 
