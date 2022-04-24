@@ -1,10 +1,16 @@
 import datetime
+import json
 import logging
+import os
 import sys
+from typing import Generator
 
 import pytz
 import structlog
 import typer
+
+from act.device_infos import DeviceInfo
+from act.last_time_stamp import LastTimeStamp
 
 
 class Act:
@@ -16,7 +22,7 @@ class Act:
         logging.basicConfig(
             format="%(message)s",
             stream=sys.stdout,
-            level=logging.INFO,
+            level=logging.DEBUG,
         )
         structlog.configure(
             processors=[
@@ -61,6 +67,44 @@ class Act:
             logger.info(f"Running as though it is {local_dt}")
             if dry_run:
                 logger.debug("Using dry run so will not send commands to heat pump")
+
+            deviceInfos = list(self.__getLatestDeviceInfos(local_dt))
+            deviceInfos.reverse()
+            if deviceInfos:
+                logger.debug("Latest device info", reading_timestamp=LastTimeStamp.lastTimeStampInUTC(deviceInfos[-1]).isoformat())
+
+    def __getLatestDeviceInfos(self, calculationMoment: datetime.datetime) -> Generator[DeviceInfo, None, None]:
+
+        yieldCounter = 600
+
+        devicesFolder = os.path.join("/state", "downloads", "raw")
+        logging.debug("Loading device info from " + devicesFolder)
+
+        for root, dirs, files in os.walk(devicesFolder, topdown=True):
+            dirs.sort(reverse=True)
+            files.sort(reverse=True)
+            deviceFiles = [fileName for fileName in files if fileName.startswith("devices_")]
+            for file in deviceFiles:
+                filePath = os.path.join(root, file)
+                with open(filePath, encoding="utf-8") as devices:
+                    try:
+                        deviceInfo: DeviceInfo = json.load(devices)[0]["Structure"]["Devices"][0]["Device"]
+                    except:
+                        continue
+
+                    lastTimeStamp = LastTimeStamp.lastTimeStampInUTC(deviceInfo)
+
+                    if lastTimeStamp <= calculationMoment:
+
+                        try:
+                            del deviceInfo["ListHistory24Formatters"]
+                        except:
+                            pass
+
+                        yield deviceInfo
+                        yieldCounter += -1
+                        if yieldCounter <= 0:
+                            return
 
 
 if __name__ == "__main__":
