@@ -1,10 +1,11 @@
 import datetime
-import pytz
 from typing import Optional
 
+import pytz
 from crontab import CronTab
 
 from .device_infos import DeviceInfos
+
 
 # --------------------------------------------------------------------------------
 class Schedule:
@@ -30,9 +31,9 @@ class Schedule:
     def reason_to_turn_on(moment: datetime.datetime, device_infos: DeviceInfos) -> Optional[str]:
         """This is used to nudge the system into life depending on the temperature, the boosting and the time"""
 
-        recentJob = Schedule.recent_job_moment(moment, Schedule.on_job_name())
-        if recentJob:
-            return f"Schedule requested to turn on at {recentJob.isoformat()}"
+        recent_job = Schedule.recent_job_moment(moment, Schedule.on_job_name())
+        if recent_job:
+            return f"Schedule requested to turn on at {recent_job.isoformat()}"
 
         return None
 
@@ -42,7 +43,7 @@ class Schedule:
         file_cron = CronTab(tab=Schedule.crontab())
 
         jobs = file_cron.find_command(job_name)
-        nextOnTimes = []
+        next_on_times = []
         # get_next doesn't include now if it's exactly the right time but we consider that we will act if it's the right time right now
         a_smidge_earlier = moment - datetime.timedelta(seconds=1)
         # tz = pytz.timezone("Europe/London")
@@ -53,13 +54,13 @@ class Schedule:
         for job in jobs:
             schedule = job.schedule(date_from=a_smidge_earlier)
 
-            nextRun = schedule.get_next()
-            if nextRun:
-                nextOnTimes.append(nextRun)
+            next_run = schedule.get_next()
+            if next_run:
+                next_on_times.append(next_run)
 
-        if nextOnTimes:
-            nextOnTimes.sort()
-            return nextOnTimes[0]
+        if next_on_times:
+            next_on_times.sort()
+            return next_on_times[0]
 
         return None
 
@@ -72,29 +73,29 @@ class Schedule:
         for job in jobs:
             schedule = job.schedule(date_from=moment)
 
-            previousRun = schedule.get_prev()
-            if (moment - previousRun).total_seconds() < time_window:
-                return previousRun
+            previous_run = schedule.get_prev()
+            if (moment - previous_run).total_seconds() < time_window:
+                return previous_run
 
         return None
 
     @staticmethod
     def previous_job(moment: datetime.datetime) -> str:
 
-        oldMoment = datetime.datetime.min
+        old_moment = datetime.datetime.min
         utc = pytz.timezone("UTC")
-        oldMoment = utc.localize(oldMoment)
+        old_moment = utc.localize(old_moment)
 
-        oldJobName = None
+        old_job_name = None
         file_cron = CronTab(tab=Schedule.crontab())
         for job in file_cron.crons:
             schedule = job.schedule(date_from=moment)
-            previousRun = schedule.get_prev()
-            if previousRun > oldMoment:
-                oldJobName = job.command
-                oldMoment = previousRun
+            previous_run = schedule.get_prev()
+            if previous_run > old_moment:
+                old_job_name = job.command
+                old_moment = previous_run
 
-        if oldJobName:
-            return oldJobName
+        if old_job_name:
+            return old_job_name
 
         raise Exception(f"Unable to find a job scheduled before {moment}")

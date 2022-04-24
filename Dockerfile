@@ -26,11 +26,10 @@ RUN pip install mypy
 COPY --from=collect_source /app/act act
 
 COPY lint/ act/lint/
-
-# RUN mypy --install-types
-
 RUN mypy -p act --config-file act/lint/mypy.ini
 
+COPY .pylintrc .
+RUN pylint act/
 
 #-------------------
 FROM core as check_formatting_is_reasonable

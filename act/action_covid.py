@@ -1,12 +1,12 @@
 import datetime
+from typing import Generator
+
 import structlog
 
-from typing import Generator
 from .action import Action
-
+from .device_infos import DeviceInfos
 from .target_water_temperature import TargetWaterTemperature
 
-from .device_infos import DeviceInfos
 
 # --------------------------------------------------------------------------------
 class Covid:
@@ -26,7 +26,7 @@ class Covid:
         tolerable = desired - 8
         if current_tank_temperature > tolerable:
             structlog.get_logger().debug(
-                f"The tank temperature is higher than the tolerable temperature so we're going to leave it alone",
+                "The tank temperature is higher than the tolerable temperature so we're going to leave it alone",
                 current_tank_temperature=current_tank_temperature,
                 tolerable=tolerable,
             )
@@ -38,7 +38,8 @@ class Covid:
             yield Action(
                 "SetTankWaterTemperature",
                 desired,
-                f"The current target tank temperature is only {set_temperature} °C which is below the desired temperature of {desired} °C so we're going to increase the desired temperature",
+                f"The current target tank temperature is only {set_temperature} °C which is below the desired temperature of {desired} °C"
+                + " so we're going to increase the desired temperature",
             )
 
         if not latest_device_info["Power"]:
@@ -75,14 +76,14 @@ class Covid:
 
     @staticmethod
     def ensure_the_house_is_warm(
-        calculationMoment: datetime.datetime,
-        deviceInfos: DeviceInfos,
+        calculation_moment: datetime.datetime,
+        device_infos: DeviceInfos,
     ) -> Generator[Action, None, None]:
 
-        latest_device_info = deviceInfos[-1]
+        latest_device_info = device_infos[-1]
 
         if not latest_device_info["Power"]:
-            if not Covid.can_be_powered_off(calculationMoment, deviceInfos):
+            if not Covid.can_be_powered_off(calculation_moment, device_infos):
                 yield Action(
                     "Power",
                     "true",

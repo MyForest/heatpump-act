@@ -8,21 +8,21 @@ class TemperatureThresholds:
     @staticmethod
     def average_outdoor_temperature(device_infos: DeviceInfos) -> float:
 
-        recentDeviceInfos = device_infos[-10:]
+        recent_device_infos = device_infos[-10:]
 
-        total = sum([float(deviceInfo["OutdoorTemperature"]) for deviceInfo in recentDeviceInfos])
-        return total / len(recentDeviceInfos)
+        total = sum([float(deviceInfo["OutdoorTemperature"]) for deviceInfo in recent_device_infos])
+        return total / len(recent_device_infos)
 
     @staticmethod
     def max_flow_temp(calculation_moment: datetime.datetime, device_infos: DeviceInfos) -> float:
 
-        effectiveOutdoorTemperature = device_infos[-1]["OutdoorTemperature"]
+        effective_outdoor_temperature = device_infos[-1]["OutdoorTemperature"]
         try:
-            effectiveOutdoorTemperature = EffectiveTemperature.apparent_temp(calculation_moment)
-        except:
+            effective_outdoor_temperature = EffectiveTemperature.apparent_temp(calculation_moment)
+        except BaseException:
             pass
 
-        if effectiveOutdoorTemperature < -15:
+        if effective_outdoor_temperature < -15:
             return 50
 
         # -2x/3 + 40 =y
@@ -37,25 +37,25 @@ class TemperatureThresholds:
         # 2020-12-25 Reducing uplift from 4 to 2 to make it run more gently
         # 2021-01-03 Increasing uplift from 2 to 4 because Carey is cold
 
-        compCurveValue = int(38 - 2 * effectiveOutdoorTemperature / 3)
-        ensureNotTooHigh = min(compCurveValue, 50)
-        ensureNotTooLow = max(
-            ensureNotTooHigh,
+        comp_curve_value = int(38 - 2 * effective_outdoor_temperature / 3)
+        ensure_not_too_high = min(comp_curve_value, 50)
+        ensure_not_too_low = max(
+            ensure_not_too_high,
             TemperatureThresholds.min_flow_temp(calculation_moment, device_infos),
         )
-        intended = ensureNotTooLow + 4
+        intended = ensure_not_too_low + 4
         return intended
 
     @staticmethod
     def min_flow_temp(calculation_moment: datetime.datetime, device_infos: DeviceInfos) -> float:
 
-        effectiveOutdoorTemperature = device_infos[-1]["OutdoorTemperature"]
+        effective_outdoor_temperature = device_infos[-1]["OutdoorTemperature"]
         try:
-            effectiveOutdoorTemperature = EffectiveTemperature.apparent_temp(calculation_moment)
-        except:
+            effective_outdoor_temperature = EffectiveTemperature.apparent_temp(calculation_moment)
+        except BaseException:
             pass
 
-        if effectiveOutdoorTemperature > 15:
+        if effective_outdoor_temperature > 15:
             return 25
 
         # -x/3 + 30 =y
@@ -63,10 +63,10 @@ class TemperatureThresholds:
         # 0 => 30
         # -15 => 35
 
-        compCurveValue = int(30 - effectiveOutdoorTemperature / 3)
-        ensureNotTooHigh = min(compCurveValue, 35)
-        ensureNotTooLow = max(ensureNotTooHigh, 25)
-        return ensureNotTooLow
+        comp_curve_value = int(30 - effective_outdoor_temperature / 3)
+        ensure_not_too_high = min(comp_curve_value, 35)
+        ensure_not_too_low = max(ensure_not_too_high, 25)
+        return ensure_not_too_low
 
     @staticmethod
     def no_heating_required(calculation_moment: datetime.datetime, device_infos: DeviceInfos) -> float:
@@ -105,5 +105,5 @@ class TemperatureThresholds:
         return 55
 
     @staticmethod
-    def maxTankSetTemp() -> float:
+    def max_tank_set_temp() -> float:
         return 60

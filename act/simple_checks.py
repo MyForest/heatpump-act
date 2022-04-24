@@ -11,28 +11,28 @@ class SimpleChecks:
     @staticmethod
     def is_hot_water_forced_on(device_infos: DeviceInfos) -> bool:
         if device_infos:
-            deviceInfo = device_infos[-1]
+            device_info = device_infos[-1]
 
-            return deviceInfo["ForcedHotWaterMode"]
+            return device_info["ForcedHotWaterMode"]
         return False
 
     @staticmethod
     def is_holiday_mode_on(device_infos: DeviceInfos) -> bool:
         if device_infos:
-            deviceInfo = device_infos[-1]
-            return deviceInfo["HolidayMode"]
+            device_info = device_infos[-1]
+            return device_info["HolidayMode"]
         return False
 
     @staticmethod
     def is_defrost_mode_on(device_infos: DeviceInfos) -> bool:
         if device_infos:
-            deviceInfo = device_infos[-1]
-            return deviceInfo["DefrostMode"]
+            device_info = device_infos[-1]
+            return device_info["DefrostMode"]
         return False
 
     @staticmethod
     def is_heatpump_offline(device_infos: DeviceInfos) -> bool:
         if device_infos:
-            deviceInfo = device_infos[-1]
-            return deviceInfo["Offline"]
+            device_info = device_infos[-1]
+            return device_info["Offline"]
         return False

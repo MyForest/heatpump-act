@@ -1,11 +1,11 @@
 import datetime
-
 from typing import Generator
 
-from .temperature_thresholds import TemperatureThresholds
-from .schedule import Schedule
 from .action import Action
 from .device_infos import DeviceInfos
+from .schedule import Schedule
+from .temperature_thresholds import TemperatureThresholds
+
 
 # --------------------------------------------------------------------------------
 class StopForcingHotWater:
@@ -15,20 +15,20 @@ class StopForcingHotWater:
         device_infos: DeviceInfos,
     ) -> Generator[Action, None, None]:
 
-        deviceInfo = device_infos[-1]
+        device_info = device_infos[-1]
 
-        if not deviceInfo["ForcedHotWaterMode"]:
+        if not device_info["ForcedHotWaterMode"]:
             return
 
-        tankTemp = float(deviceInfo["TankWaterTemperature"])
-        currentTarget = float(deviceInfo["SetTankWaterTemperature"])
+        tank_temp = float(device_info["TankWaterTemperature"])
+        current_target = float(device_info["SetTankWaterTemperature"])
 
-        if tankTemp >= currentTarget:
+        if tank_temp >= current_target:
 
             yield Action(
                 "ForcedHotWaterMode",
                 False,
-                f"The tank temperature is{tankTemp} °C which is at least as hot as the target of {currentTarget} °C so stopping forced hot water mode",
+                f"The tank temperature is{tank_temp} °C which is at least as hot as the target of {current_target} °C so stopping forced hot water mode",
             )
 
             if Schedule.previous_job(calculation_moment) == Schedule.off_job_name():
@@ -38,10 +38,10 @@ class StopForcingHotWater:
                     "Heat pump was previously turned off by a schedule so revert to being off",
                 )
 
-        shutdownTemp = TemperatureThresholds.shutdown_water_at_this_temperature()
-        if tankTemp >= shutdownTemp:
+        shutdown_temp = TemperatureThresholds.shutdown_water_at_this_temperature()
+        if tank_temp >= shutdown_temp:
             yield Action(
                 "ForcedHotWaterMode",
                 False,
-                f"The tank temperature is {tankTemp} °C which is at least as hot as the shutdown temperature of {shutdownTemp} °C so stopping forced hot water mode",
+                f"The tank temperature is {tank_temp} °C which is at least as hot as the shutdown temperature of {shutdown_temp} °C so stopping forced hot water mode",
             )

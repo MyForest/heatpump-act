@@ -37,7 +37,7 @@ class ManageSpaceHeatingPower:
                 structlog.get_logger().debug("Apparently we should turn off", reason=reason)
                 avoid = ManageSpaceHeatingPower.avoid_cleverness(device_infos)
 
-                if avoid == None:
+                if avoid is None:
                     reason_to_heat_tank = ManageSpaceHeatingPower.warm_up_tank(calculation_moment, device_infos)
 
                     if reason_to_heat_tank:
@@ -152,7 +152,10 @@ class ManageSpaceHeatingPower:
         )
 
         if tank_temp < tank_temperature_below_which_we_should_heat_water:
-            return f"We're going to heat the tank to {desired_temp} °C because it's at {tank_temp} °C which is lower than the trigger temperature of {tank_temperature_below_which_we_should_heat_water} °C and the flow is at {flow_temp} °C"
+            response = f"We're going to heat the tank to {desired_temp} °C because it's at {tank_temp} °C"
+            response += f"which is lower than the trigger temperature of {tank_temperature_below_which_we_should_heat_water} °C "
+            response += f"and the flow is at {flow_temp} °C"
+            return response
 
         return None
 
@@ -164,13 +167,13 @@ class ManageSpaceHeatingPower:
             reason_to_be_on = TurnOnPower.should_turn_on_power(calculation_moment, device_infos)
             if reason_to_be_on:
                 # Don't get into a fight
-                structlog.get_logger().debug(f"We should not turn off because we should be on", reason_to_be_on=reason_to_be_on)
+                structlog.get_logger().debug("We should not turn off because we should be on", reason_to_be_on=reason_to_be_on)
                 return None
-            else:
-                structlog.get_logger().debug("Power doesn't need to be on")
+
+            structlog.get_logger().debug("Power doesn't need to be on")
+
         except StopIteration:
             structlog.get_logger().debug("Power doesn't need to be on")
-            pass
 
         duration_in_minutes = 5
         recent_device_infos = device_infos[-duration_in_minutes:]
@@ -228,16 +231,15 @@ class ManageSpaceHeatingPower:
 
         if has_been_warm:
             return f"It has been warm enough to turn off the heating{flow_info}"
+
+        if hot_infos:
+            wait_info = f" but it needs to be above {target_temp} °C for another {int(dwell_time - has_been_warm_duration)} seconds"
         else:
+            wait_info = f" but it needs to be above {target_temp} °C for {int(dwell_time)} seconds"
 
-            if hot_infos:
-                wait_info = f" but it needs to be above {target_temp} °C for another {int(dwell_time - has_been_warm_duration)} seconds"
-            else:
-                wait_info = f" but it needs to be above {target_temp} °C for {int(dwell_time)} seconds"
+        structlog.get_logger().debug(f"It hasn't been warm enough to turn off the heating{ flow_info } { wait_info }")
 
-            structlog.get_logger().debug(f"It hasn't been warm enough to turn off the heating{ flow_info } { wait_info }")
-
-            return None
+        return None
 
     @staticmethod
     def is_plenty_warm_enough(calculation_moment: datetime.datetime, device_infos: DeviceInfos) -> Optional[str]:
@@ -315,13 +317,9 @@ class ManageSpaceHeatingPower:
         if OccupantComesHome.needs_to_be_warmer(calculation_moment, device_infos):
             return "Needs to be warm for occupant coming home"
 
-        try:
-            if ManageSpaceHeatingPower.is_plenty_sunny_enough(calculation_moment, device_infos):
-                structlog.get_logger().debug("Not turning on because it's plenty sunny enough")
-                return None
-        except BaseException as err:
-            raise
-            structlog.get_logger().debug(f"Unable to get Solar power reading {err=}, {type(err)=}")
+        if ManageSpaceHeatingPower.is_plenty_sunny_enough(calculation_moment, device_infos):
+            structlog.get_logger().debug("Not turning on because it's plenty sunny enough")
+            return None
 
         try:
             reason = ManageSpaceHeatingPower.is_plenty_warm_enough(calculation_moment, device_infos)
@@ -357,10 +355,8 @@ class ManageSpaceHeatingPower:
 
         flow_info = f" - the return temperature is currently {device_infos[-1]['ReturnTemperature']} °C"
 
-        on_or_off_description = "Unknown"
         if has_been_cold:
             structlog.get_logger().info(f"It has been cold enough to turn on the heating{flow_info}")
-            on_or_off_description = "It's on now"
         else:
 
             if cold_infos:
@@ -369,16 +365,13 @@ class ManageSpaceHeatingPower:
                 on_in_seconds = int(dwell_time - has_been_old_duration)
                 wait_info = f" for another {on_in_seconds} seconds"
 
-                on_or_off_description = (datetime.datetime.utcnow() + datetime.timedelta(seconds=on_in_seconds)).isoformat()
             else:
                 will_be_cold = ManageSpaceHeatingPower.when_will_it_be_cold_enough_to_turn_on(calculation_moment, device_infos, min_temp)
                 if will_be_cold:
                     cold_plus_dwell = will_be_cold + datetime.timedelta(seconds=dwell_time)
                     wait_info = f" so we'll probably wait until {cold_plus_dwell.isoformat()[11:16] } using a dwell time of {round(dwell_time)} seconds"
-                    on_or_off_description = cold_plus_dwell.isoformat()
                 else:
                     wait_info = f" for {round(dwell_time)} seconds"
-                    on_or_off_description = (datetime.datetime.utcnow() + datetime.timedelta(seconds=dwell_time)).isoformat()
 
             structlog.get_logger().debug(
                 f"It hasn't been cold enough to turn on the heating {flow_info} but it needs to be below the minimum temperature of {min_temp} °C{wait_info}"
@@ -395,7 +388,7 @@ class ManageSpaceHeatingPower:
         return False
 
     @staticmethod
-    def when_will_it_be_cold_enough_to_turn_on(calculation_moment: datetime.datetime, device_infos: DeviceInfos, minTemp: float) -> Optional[datetime.datetime]:
+    def when_will_it_be_cold_enough_to_turn_on(calculation_moment: datetime.datetime, device_infos: DeviceInfos, min_temp: float) -> Optional[datetime.datetime]:
 
         last_on = ManageSpaceHeatingPower.when_was_heating_last_on(device_infos)
         if last_on:
@@ -424,11 +417,11 @@ class ManageSpaceHeatingPower:
 
         drop_per_second = (return_when_turned_off - current_return) / seconds_since_last_on
 
-        seconds_until_cold = (current_return - minTemp) / drop_per_second
+        seconds_until_cold = (current_return - min_temp) / drop_per_second
 
         time_when_cold = calculation_moment + datetime.timedelta(seconds=seconds_until_cold)
 
-        structlog.get_logger().debug("Time when the return temperature will be at the minimum temperature", minTemp=minTemp, time_when_cold=time_when_cold.isoformat()[11:16])
+        structlog.get_logger().debug("Time when the return temperature will be at the minimum temperature", minTemp=min_temp, time_when_cold=time_when_cold.isoformat()[11:16])
 
         return time_when_cold
 

@@ -11,6 +11,6 @@ class MidPointTemp:
     ) -> float:
         # Magic numbers for polynomial using UK mid-point historic temps
 
-        m = calculation_moment.month
+        month = calculation_moment.month
         # Equation for Goole, United Kingdom: https://www.metoffice.gov.uk/research/climate/maps-and-data/uk-climate-averages/gcx4kb837
-        return (0.0019 * m**5) + (-0.04973 * m**4) + (0.37424 * m**3) - (0.64667 * m**2) + (0.43078 * m) + 3.86
+        return (0.0019 * month**5) + (-0.04973 * month**4) + (0.37424 * month**3) - (0.64667 * month**2) + (0.43078 * month) + 3.86

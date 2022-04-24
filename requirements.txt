@@ -1,8 +1,10 @@
 black
 croniter
 matplotlib
+mypy
 numpy
 pandas
+pylint
 python-crontab
 python-dotenv
 pytz

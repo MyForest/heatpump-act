@@ -30,9 +30,9 @@ class ManageTankTemperature:
     def __was_recently_heating_water(device_infos: DeviceInfos) -> bool:
 
         # Even if not forced, we are willing to let it carry on if it's getting hotter
-        hotWater_energy_used = sum([device_info["HotWaterEnergyConsumedRate1"] for device_info in device_infos])
+        hot_water_energy_used = sum([device_info["HotWaterEnergyConsumedRate1"] for device_info in device_infos])
 
-        return hotWater_energy_used > 0
+        return hot_water_energy_used > 0
 
     @staticmethod
     def manage_tank_temperature(
@@ -56,13 +56,13 @@ class ManageTankTemperature:
             if mean_tank_temperature >= TemperatureThresholds.shutdown_water_at_this_temperature():
 
                 if ManageTankTemperature.__was_recently_heating_water(device_infos[-batch_size:]):
-                    structlog.get_logger().debug(f"Water has been heated in the last batch of cycles so leaving it alone", batch_size=batch_size)
+                    structlog.get_logger().debug("Water has been heated in the last batch of cycles so leaving it alone", batch_size=batch_size)
                     return
 
                 # It's been running this way for a while and has had chance to respond
                 if latest_device_info["ForcedHotWaterMode"]:
                     structlog.get_logger().debug(
-                        f"Hot water is being forced so leaving it alone", current_target=current_target, when_was_target_set=when_was_target_set.isoformat()
+                        "Hot water is being forced so leaving it alone", current_target=current_target, when_was_target_set=when_was_target_set.isoformat()
                     )
                     return
 
@@ -71,13 +71,13 @@ class ManageTankTemperature:
             else:
                 # It's only been there for a short time, the system maybe be getting going
                 structlog.get_logger().debug(
-                    f"Hot water was recently pushed to the current target so leaving it alone whilst it gets on with that",
+                    "Hot water was recently pushed to the current target so leaving it alone whilst it gets on with that",
                     current_target=current_target,
                     when_was_target_set=when_was_target_set.isoformat(),
                 )
                 return
 
-        flowTemperature = float(latest_device_info["FlowTemperature"])
+        flow_temperature = float(latest_device_info["FlowTemperature"])
 
         new_target = TargetWaterTemperature.target_tank_temperature(calculation_moment, device_infos)
 
@@ -86,5 +86,5 @@ class ManageTankTemperature:
                 yield Action(
                     "SetTankWaterTemperature",
                     new_target,
-                    f"The current target tank temperature is {current_target} °C so setting target temp of {new_target} °C. The flow is {flowTemperature} °C.",
+                    f"The current target tank temperature is {current_target} °C so setting target temp of {new_target} °C. The flow is {flow_temperature} °C.",
                 )

@@ -1,6 +1,7 @@
 import datetime
-import structlog
 from typing import Generator
+
+import structlog
 
 from .action import Action
 from .action_turn_on_power import TurnOnPower
@@ -67,7 +68,7 @@ class TurnOffPower:
     def was_stable_flow_temperature(device_infos: DeviceInfos) -> bool:
         recent_flow_temps = [float(deviceInfo["FlowTemperature"]) for deviceInfo in device_infos[-10:]]
         delta = max(recent_flow_temps) - min(recent_flow_temps)
-        structlog.get_logger().debug(f"The flow temperature delta over the last readings in °C", size=len(recent_flow_temps), delta=delta)
+        structlog.get_logger().debug("The flow temperature delta over the last readings in °C", size=len(recent_flow_temps), delta=delta)
         if max(recent_flow_temps) - min(recent_flow_temps) <= 1:
             return True
         return False

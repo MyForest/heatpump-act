@@ -47,9 +47,9 @@ class TurnOnPower:
             TurnOnPower.should_room_temperature_turn_it_on(device_infos),
         ]
 
-        interestingReasons = [reason for reason in reasons if reason]
-        if interestingReasons:
-            return ", ".join(interestingReasons)
+        interesting_reasons = [reason for reason in reasons if reason]
+        if interesting_reasons:
+            return ", ".join(interesting_reasons)
 
         if Schedule.previous_job(calculation_moment) != Schedule.on_job_name():
             # Let's find out when the next planned on time is

@@ -4,16 +4,17 @@ import math
 from .device_infos import DeviceInfos
 from .effective_temperature import EffectiveTemperature
 
+
 # --------------------------------------------------------------------------------
 class Dwell:
     @staticmethod
-    def turn_off_dwell(calculationMoment: datetime.datetime, device_infos: DeviceInfos) -> float:
+    def turn_off_dwell(calculation_moment: datetime.datetime, device_infos: DeviceInfos) -> float:
 
         latest_device_info = device_infos[-1]
 
         outdoor_temperature = float(latest_device_info["OutdoorTemperature"])
         try:
-            outdoor_temperature = EffectiveTemperature.apparent_temp(calculationMoment)
+            outdoor_temperature = EffectiveTemperature.apparent_temp(calculation_moment)
         except:
             pass
 

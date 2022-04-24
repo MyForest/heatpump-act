@@ -1,12 +1,12 @@
 import json
 import os
-from dotenv import load_dotenv
 from datetime import datetime
-import structlog
-import typer
 from typing import Any
 
+import structlog
+import typer
 import urllib3
+from dotenv import load_dotenv
 
 load_dotenv()
 
@@ -16,25 +16,25 @@ class AlterSetting:
         self.__logger = structlog.get_logger(self.__class__.__name__)
 
     def record_action(self, name: str, value: Any, message: str, source: str) -> None:
-        effectiveMoment = datetime.utcnow()
-        actionsFolder = os.path.join(
+        effective_moment = datetime.utcnow()
+        actions_folder = os.path.join(
             "/state",
             "actions",
             "raw",
-            "{:%Y}".format(effectiveMoment),
-            "{:%m}".format(effectiveMoment),
-            "{:%d}".format(effectiveMoment),
+            "{:%Y}".format(effective_moment),
+            "{:%m}".format(effective_moment),
+            "{:%d}".format(effective_moment),
         )
 
-        if not os.path.exists(actionsFolder):
-            self.__logger(f"Creating {actionsFolder}")
-            os.makedirs(actionsFolder)
+        if not os.path.exists(actions_folder):
+            self.__logger.info(f"Creating {actions_folder}")
+            os.makedirs(actions_folder)
 
         path = os.path.join(
-            actionsFolder,
-            f"{ effectiveMoment.isoformat() }_{ name }_{ value }.json",
+            actions_folder,
+            f"{ effective_moment.isoformat() }_{ name }_{ value }.json",
         )
-        with open(path, "w+t") as action_file:
+        with open(path, "w+t", encoding="utf-8") as action_file:
             self.__logger.debug(f"Saving '{name}' action to {path}")
             json.dump(
                 {
@@ -42,7 +42,7 @@ class AlterSetting:
                     "value": value,
                     "source": source,
                     "message": message,
-                    "moment": f"{effectiveMoment.isoformat()}+00:00",
+                    "moment": f"{effective_moment.isoformat()}+00:00",
                 },
                 action_file,
                 indent=4,
@@ -68,16 +68,16 @@ class AlterSetting:
         Instruct the heatpump to alter a setting.
         """
 
-        self.do(name, value, message, source, shoosh)
+        self.send_update_to_melcloud(name, value, message, source, shoosh)
 
     # --------------------------------------------------------------------------------
-    def do(self, name: str, value: str | float, message: str, source: str, shoosh: bool = False) -> None:
+    def send_update_to_melcloud(self, name: str, value: str | float, message: str, source: str, shoosh: bool = False) -> None:
 
         self.record_action(name, value, message, source)
 
         http = urllib3.PoolManager()
 
-        baseURL = "https://app.melcloud.com/Mitsubishi.Wifi.Client/"
+        base_url = "https://app.melcloud.com/Mitsubishi.Wifi.Client/"
 
         headers = {
             "Content-Type": "application/json; charset=utf-8",
@@ -117,49 +117,50 @@ class AlterSetting:
 
         # Read the current values because some of the updategrams require multiple settings and we don't know the current value for the other settings
         fake = {"EffectiveFlags": 0, "DeviceID": os.environ["DEVICE_ID"], "DeviceType": 1}
-        r = http.request(
+        request = http.request(
             "POST",
-            f"{baseURL}Device/SetAtw",
+            f"{base_url}Device/SetAtw",
             headers=headers,
             body=json.dumps(fake).encode("utf-8"),
         )
 
-        updateGram = json.loads(r.data.decode("utf-8"))
+        update_gram = json.loads(request.data.decode("utf-8"))
 
         # Now update the setting specified
-        updateGram["EffectiveFlags"] = flags[name]
+        update_gram["EffectiveFlags"] = flags[name]
         derived_value: Any = value
         if value == "true":
             derived_value = True
         if value == "false":
             derived_value = False
-        updateGram[name] = derived_value
+        update_gram[name] = derived_value
 
-        self.validate_settings(updateGram)
+        AlterSetting.validate_settings(update_gram)
 
-        body = json.dumps(updateGram).encode("utf-8")
+        body = json.dumps(update_gram).encode("utf-8")
 
         if not shoosh:
             self.__logger.info("Sending update...")
-        r = http.request("POST", f"{baseURL}Device/SetAtw", headers=headers, body=body)
+        request = http.request("POST", f"{base_url}Device/SetAtw", headers=headers, body=body)
 
         if not shoosh:
-            self.__logger.info(r.data)
+            self.__logger.info(request.data)
 
     # --------------------------------------------------------------------------------
-    def validate_settings(self, updateGram):
+    @staticmethod
+    def validate_settings(update_gram):
 
         # MINIMUM_ATW_SET_TEMPERATURE: 10,
         # MAXIMUM_ATW_SET_TEMPERATURE: 30,
 
-        if float(updateGram["SetHeatFlowTemperatureZone1"]) < 25:
+        if float(update_gram["SetHeatFlowTemperatureZone1"]) < 25:
             raise Exception("The flow temp can't be below 25 °C")
 
-        if float(updateGram["SetTankWaterTemperature"]) < 10:
+        if float(update_gram["SetTankWaterTemperature"]) < 10:
             raise Exception("The water tank temp can't be below 10 °C")
 
         max_hot_water_temp = 60
-        if float(updateGram["SetTankWaterTemperature"]) > max_hot_water_temp:
+        if float(update_gram["SetTankWaterTemperature"]) > max_hot_water_temp:
             raise Exception(f"The water tank temp can't be above {max_hot_water_temp} °C")
 
 

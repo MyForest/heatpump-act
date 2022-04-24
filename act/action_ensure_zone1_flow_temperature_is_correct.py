@@ -1,13 +1,14 @@
 import datetime
 import statistics
+from typing import Generator
+
 import structlog
 
-from typing import Generator
 from .action import Action
-from .temperature_thresholds import TemperatureThresholds
 from .action_manage_power_state_for_space_heating import ManageSpaceHeatingPower
-
 from .device_infos import DeviceInfos
+from .temperature_thresholds import TemperatureThresholds
+
 
 # --------------------------------------------------------------------------------
 class EnsureZone1FlowTemperatureIsCorrect:
@@ -169,16 +170,16 @@ class EnsureZone1FlowTemperatureIsCorrect:
         if new_target_temperature == current_target_temperature:
             return current_target_temperature
 
-        maxTemp = TemperatureThresholds.max_flow_temp(calculation_moment, device_infos)
-        if new_target_temperature > maxTemp:
-            new_target_temperature = maxTemp
+        max_temp = TemperatureThresholds.max_flow_temp(calculation_moment, device_infos)
+        if new_target_temperature > max_temp:
+            new_target_temperature = max_temp
             if current_target_temperature != new_target_temperature:
                 # Only debug when it's interesting
                 structlog.get_logger().debug("Although the heat pump is winding down, we're limiting the target temp to the max", newTargetTemperature=new_target_temperature)
         else:
             pass
-            structlog.get_logger().debug(
-                "The heat pump is starting to wind down so increase the desired target temperature to create some demand", newTargetTemperature=new_target_temperature
-            )
+            # structlog.get_logger().debug(
+            #     "The heat pump is starting to wind down so increase the desired target temperature to create some demand", newTargetTemperature=new_target_temperature
+            # )
 
         return new_target_temperature

@@ -10,7 +10,7 @@ load_dotenv()
 # --------------------------------------------------------------------------------
 class EmonCMS:
     @staticmethod
-    def get_feed_values(feedId: int, moment: datetime.datetime = datetime.datetime.utcnow(), duration: int = 300, interval: int = 10):
+    def get_feed_values(feed_id: int, moment: datetime.datetime = datetime.datetime.utcnow(), duration: int = 300, interval: int = 10):
 
         http = urllib3.PoolManager()
 
@@ -20,7 +20,7 @@ class EmonCMS:
         url = (
             os.environ["EMONCMS_URL"]
             + "feed/data.json?id="
-            + str(feedId)
+            + str(feed_id)
             + "&apikey="
             + os.environ["EMONCMS_API_KEY"]
             + "&start="
@@ -30,16 +30,16 @@ class EmonCMS:
             + "&interval="
             + str(interval)
         )
-        r = http.request("GET", url, timeout=5)
+        response = http.request("GET", url, timeout=5)
 
-        j = json.loads(r.data.decode("utf-8"))
+        j = json.loads(response.data.decode("utf-8"))
         if j:
             result = []
-            for moment, value in j:
+            for discovered_moment, value in j:
                 if value is None:
                     pass
                 else:
-                    result.append({"time": moment, "value": float(value)})
+                    result.append({"time": discovered_moment, "value": float(value)})
 
             if result:
                 return result

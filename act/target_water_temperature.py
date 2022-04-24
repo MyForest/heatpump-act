@@ -28,7 +28,9 @@ class TargetWaterTemperature:
 
         midpoint_temp = MidPointTemp.midpoint_temp_for_month(calculation_moment, device_infos)
 
-        if midpoint_temp > TemperatureThresholds.quite_cold_outdoor_temp() and midpoint_temp < TemperatureThresholds.no_heating_required(calculation_moment, device_infos):
+        is_not_really_cold = midpoint_temp > TemperatureThresholds.quite_cold_outdoor_temp()
+        some_heating_required = midpoint_temp < TemperatureThresholds.no_heating_required(calculation_moment, device_infos)
+        if is_not_really_cold and some_heating_required:
             # Always warm straight back up when someone has a shower
             structlog.get_logger().debug(
                 "The outdoor temperature is warmer than the quiteColdOutdoorTemp. The hot water not likely to be heated by the space heating or solar diverter"

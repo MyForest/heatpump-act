@@ -1,0 +1,26 @@
+[MESSAGES CONTROL]
+
+disable=raw-checker-failed,
+        bad-inline-option,
+        locally-disabled,
+        file-ignored,
+        suppressed-message,
+        useless-suppression,
+        deprecated-pragma,
+        use-symbolic-message-instead,
+        missing-function-docstring,
+        missing-module-docstring,
+        missing-class-docstring,
+        broad-except,
+        bare-except,
+        unused-argument,
+        too-few-public-methods,
+        too-many-arguments,
+        duplicate-code,
+        consider-using-f-string,
+        fixme,
+        too-many-locals,
+        too-many-return-statements,
+        too-many-branches
+
+max-line-length=180
