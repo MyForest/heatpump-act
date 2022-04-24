@@ -7,6 +7,7 @@ pandas
 pylint
 python-crontab
 python-dotenv
+pytest
 pytz
 structlog
 tqdm
