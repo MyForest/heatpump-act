@@ -1,83 +1,43 @@
 import datetime
-from typing import Optional
 
+import pytest
 from act.action_manage_power_state_for_space_heating import ManageSpaceHeatingPower
-from act.device_infos import DeviceInfos
 from act.temperature_thresholds import TemperatureThresholds
 
 
-def assert_in_range(
-    device_infos: DeviceInfos,
-    candidate: float,
-    low: float,
-    high: Optional[float] = None,
-) -> None:
+@pytest.mark.parametrize(
+    ["flow_temp", "return_temp", "outdoor_temp", "low", "high"],
+    [
+        pytest.param(10, 10, 10, 30, 43, id="Cold flow and warm outside"),
+        pytest.param(33, 28, 10, 28, 45, id="Warm flow and warm outside"),
+        pytest.param(40, 33, 10, 33, 45, id="Hot flow and warm outside"),
+        pytest.param(10, 10, 3, 20, 30, id="Cold flow and cold outside"),
+        pytest.param(33, 22, 3, 28, 35, id="Warm flow and cold outside"),
+        pytest.param(41, 27, 3, 28, 45, id="Hot flow and cold outside"),
+    ],
+)
+def test_startup_flow_temperature_is_sensible(flow_temp, return_temp, outdoor_temp, low, high):
 
-    assert candidate <= TemperatureThresholds.max_flow_temp(datetime.datetime.utcnow(), device_infos)
-    assert candidate >= TemperatureThresholds.min_flow_temp(datetime.datetime.utcnow(), device_infos)
-    assert candidate >= low
-
+    # Assemble
     if high is None:
         high = low
 
-    assert candidate <= high
+    assert high >= low, "The high boundary should be at least as big as the low boundary. You have mis-configured this test."
 
+    device_infos = [{"FlowTemperature": flow_temp, "ReturnTemperature": return_temp, "OutdoorTemperature": outdoor_temp}]
 
-def test_sensible_when_cold_flow_and_warm_outside():
-    device_infos = [{"FlowTemperature": 10, "ReturnTemperature": 10, "OutdoorTemperature": 10}]
-    assert_in_range(
-        device_infos,
-        ManageSpaceHeatingPower.sensible_startup_flow_temperature(datetime.datetime.utcnow(), device_infos),
-        30,
-        43,
-    )
+    # Act
+    suggested_startup_temperature = ManageSpaceHeatingPower.sensible_startup_flow_temperature(datetime.datetime.utcnow(), device_infos)
 
+    # Assert
+    assert suggested_startup_temperature <= TemperatureThresholds.max_flow_temp(
+        datetime.datetime.utcnow(), device_infos
+    ), "The startup temp is higher than the maximum allowable flow temp"
 
-def test_sensible_when_warm_flow_and_warm_outside():
-    device_infos = [{"FlowTemperature": 33, "ReturnTemperature": 28, "OutdoorTemperature": 10}]
-    assert_in_range(
-        device_infos,
-        ManageSpaceHeatingPower.sensible_startup_flow_temperature(datetime.datetime.utcnow(), device_infos),
-        28,
-        45,
-    )
+    assert suggested_startup_temperature >= TemperatureThresholds.min_flow_temp(
+        datetime.datetime.utcnow(), device_infos
+    ), "The startup temp is lower than the minimum allowable flow temp"
 
+    assert suggested_startup_temperature >= low, "The startup temp is lower than the lower boundary for this scenario"
 
-def test_sensible_when_hot_flow_and_warm_outside():
-    device_infos = [{"FlowTemperature": 40, "ReturnTemperature": 33, "OutdoorTemperature": 10}]
-    assert_in_range(
-        device_infos,
-        ManageSpaceHeatingPower.sensible_startup_flow_temperature(datetime.datetime.utcnow(), device_infos),
-        33,
-        45,
-    )
-
-
-def test_sensible_when_cold_flow_and_cold_outside():
-    device_infos = [{"FlowTemperature": 10, "ReturnTemperature": 10, "OutdoorTemperature": 3}]
-    assert_in_range(
-        device_infos,
-        ManageSpaceHeatingPower.sensible_startup_flow_temperature(datetime.datetime.utcnow(), device_infos),
-        20,
-        30,
-    )
-
-
-def test_sensible_when_warm_flow_and_cold_outside():
-    device_infos = [{"FlowTemperature": 33, "ReturnTemperature": 22, "OutdoorTemperature": 3}]
-    assert_in_range(
-        device_infos,
-        ManageSpaceHeatingPower.sensible_startup_flow_temperature(datetime.datetime.utcnow(), device_infos),
-        28,
-        35,
-    )
-
-
-def test_sensible_when_hot_flow_and_cold_outside():
-    device_infos = [{"FlowTemperature": 41, "ReturnTemperature": 27, "OutdoorTemperature": 3}]
-    assert_in_range(
-        device_infos,
-        ManageSpaceHeatingPower.sensible_startup_flow_temperature(datetime.datetime.utcnow(), device_infos),
-        28,
-        45,
-    )
+    assert high >= suggested_startup_temperature, "The startup temp is higher than the upper boundary for this scenario"
