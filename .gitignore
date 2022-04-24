@@ -1,3 +1,7 @@
 **/__pycache__
 .devcontainer
 .env
+
+# Artefacts for publishing to pypi
+build_and_publish.sh
+dist/
