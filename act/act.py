@@ -69,35 +69,33 @@ class Act:
         local_time_zone = pytz.timezone("UTC")
         local_dt = local_time_zone.localize(calculation_moment_datetime)
 
-        with structlog.contextvars.bound_contextvars(calculation_moment=local_dt.isoformat()):
+        self.__logger.info(f"Calculation moment", calculation_moment=local_dt.isoformat())
+        if dry_run:
+            self.__logger.debug("Using dry run so will not send commands to heat pump")
 
-            self.__logger.info(f"Calculation moment is {local_dt}")
-            if dry_run:
-                self.__logger.debug("Using dry run so will not send commands to heat pump")
+        device_infos = list(self.__getLatestDeviceInfos(local_dt))
+        device_infos.reverse()
+        if len(device_infos) == 0:
+            self.__logger.exception("No device information files were found")
 
-            device_infos = list(self.__getLatestDeviceInfos(local_dt))
-            device_infos.reverse()
-            if len(device_infos) == 0:
-                self.__logger.exception("No device information files were found")
+        now = datetime.datetime.utcnow()
+        utc = pytz.timezone("UTC")
+        utc_now = utc.localize(now)
 
-            now = datetime.datetime.utcnow()
-            utc = pytz.timezone("UTC")
-            utc_now = utc.localize(now)
+        if (utc_now - local_dt).total_seconds() > 59:
+            logging.debug("Older runs would not have had access to the very latest device info when they ran")
+            device_infos = device_infos[:-1]
 
-            if (utc_now - local_dt).total_seconds() > 59:
-                logging.debug("Older runs would not have had access to the very latest device info when they ran")
-                device_infos = device_infos[:-1]
+        self.describe_device_infos_being_operated_on(device_infos)
 
-            self.describe_device_infos_being_operated_on(device_infos)
+        self.__log_effective_temperature(local_dt)
 
-            self.__log_effective_temperature(local_dt)
+        if not self.actions_should_be_blocked(device_infos):
+            self.__logger.info("Actions were not blocked")
+            non_conflicting_actions = list(self.get_non_conflicting_actions(local_dt, device_infos))
+            self.__logger.debug("Non-conflicting actions", size=len(non_conflicting_actions))
 
-            if not self.actions_should_be_blocked(device_infos):
-                self.__logger.info("Actions were not blocked")
-                non_conflicting_actions = list(self.get_non_conflicting_actions(local_dt, device_infos))
-                self.__logger.debug("Non-conflicting actions", size=len(non_conflicting_actions))
-
-                self.perform_actions(dry_run, device_infos, non_conflicting_actions)
+            self.perform_actions(dry_run, device_infos, non_conflicting_actions)
 
     def change(self, dryRun: bool, action: Action):
 
@@ -188,23 +186,21 @@ class Act:
 
     def __log_effective_temperature(self, calculationMoment: datetime.datetime):
         try:
-            effectiveOutdoorTemperature = EffectiveTemperature.apparent_temp(calculationMoment)
-            self.__logger.debug(f"The effective outdoor temperature is {effectiveOutdoorTemperature} °C")
+            effective_outdoor_temperature = EffectiveTemperature.apparent_temp(calculationMoment)
+            self.__logger.debug(f"Effective outdoor temperature in °C", effective_outdoor_temperature=effective_outdoor_temperature)
         except:
-            self.__logger.exception("Unable to get effective temp")
+            self.__logger.exception("Unable to get effective outdoor temperature")
             pass
 
     def describe_device_infos_being_operated_on(self, device_infos):
-        self.__logger.debug(
-            f"Operating on {len(device_infos)} device infos. The newest of which has a last time stamp of {LastTimeStamp.lastTimeStampInUTC(device_infos[-1]).isoformat()}"
-        )
+        self.__logger.debug(f"Device infos being used", size=len(device_infos), newest=LastTimeStamp.lastTimeStampInUTC(device_infos[-1]).isoformat())
 
     def __getLatestDeviceInfos(self, calculationMoment: datetime.datetime) -> Generator[DeviceInfo, None, None]:
 
         yieldCounter = 600
 
         devicesFolder = os.path.join("/state", "downloads", "raw")
-        logging.debug("Loading device info from " + devicesFolder)
+        self.__logger.debug(f"Loading device info", source=devicesFolder)
 
         for root, dirs, files in os.walk(devicesFolder, topdown=True):
             dirs.sort(reverse=True)
