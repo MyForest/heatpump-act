@@ -29,14 +29,14 @@ homepage = "https://github.com/MyForest/heatpump-act"
 
 [tool.poetry.dependencies]
 croniter = "*"
-python = ">=3.6.2"
+python = ">=3.6.2,<4"
 python-crontab = "*"
 python-dotenv = "*"
 pytz = "*"
 structlog = "*"
 tqdm = "*"
 typer = "*"
-urllib3 = "*"
+urllib3 = ">=1.26.5"
 
 [tool.poetry.dev-dependencies]
 black = "*"
