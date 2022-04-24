@@ -9,6 +9,7 @@ import pytz
 import structlog
 import typer
 from act.action import Action
+from act.action_manage_tank_temperature import ManageTankTemperature
 from act.action_stop_forcing_hot_water import StopForcingHotWater
 from act.alter_setting import AlterSetting
 
@@ -162,9 +163,7 @@ class Act:
 
     def gather_actions(self, calculation_moment: datetime.datetime, device_infos: DeviceInfos) -> Generator[Action, None, None]:
 
-        actionProviders = [
-            StopForcingHotWater.stop_forcing_hot_water,
-        ]
+        actionProviders = [StopForcingHotWater.stop_forcing_hot_water, ManageTankTemperature.manage_tank_temperature]
 
         for actionProvider in actionProviders:
             try:

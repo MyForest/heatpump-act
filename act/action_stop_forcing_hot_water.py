@@ -38,7 +38,7 @@ class StopForcingHotWater:
                     "Heat pump was previously turned off by a schedule so revert to being off",
                 )
 
-        shutdownTemp = TemperatureThresholds.shutdownWaterAtThisTemperature()
+        shutdownTemp = TemperatureThresholds.shutdown_water_at_this_temperature()
         if tankTemp >= shutdownTemp:
             yield Action(
                 "ForcedHotWaterMode",

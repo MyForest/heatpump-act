@@ -96,12 +96,12 @@ class TemperatureThresholds:
         return 10
 
     @staticmethod
-    def legionellaTankSetTemp() -> float:
+    def legionella_tank_set_temp() -> float:
         # Asking it to go to 55 just causes it to give up at 50
         return 60
 
     @staticmethod
-    def shutdownWaterAtThisTemperature() -> float:
+    def shutdown_water_at_this_temperature() -> float:
         return 55
 
     @staticmethod
