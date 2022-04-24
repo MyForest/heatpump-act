@@ -3,13 +3,14 @@ import json
 import logging
 import os
 import sys
-from typing import Dict, Generator, Iterable
+from typing import Dict, Generator, Iterable, List
 
 import pytz
 import structlog
 import typer
 from act.action import Action
 from act.action_stop_forcing_hot_water import StopForcingHotWater
+from act.alter_setting import AlterSetting
 
 from act.device_infos import DeviceInfo, DeviceInfos
 from act.effective_temperature import EffectiveTemperature
@@ -93,8 +94,36 @@ class Act:
 
             if not self.actions_should_be_blocked(device_infos):
                 self.__logger.info("Actions were not blocked")
-                nonConflictingActions = list(self.get_non_conflicting_actions(local_dt, device_infos))
-                self.__logger.debug("Non-conflicting actions", size=len(nonConflictingActions))
+                non_conflicting_actions = list(self.get_non_conflicting_actions(local_dt, device_infos))
+                self.__logger.debug("Non-conflicting actions", size=len(non_conflicting_actions))
+
+                self.perform_actions(dry_run, device_infos, non_conflicting_actions)
+
+    def change(self, dryRun: bool, action: Action):
+
+        prefix = ""
+        if dryRun:
+            prefix = "DRY RUN: "
+
+        self.__logger.info(f"{prefix} {action.message}")
+
+        if not dryRun:
+            AlterSetting().do(action.name, str(action.value), action.message, action.source, shoosh=True)
+
+    def perform_actions(
+        self,
+        dry_run: bool,
+        device_infos: DeviceInfos,
+        gathered_actions: List[Action],
+    ) -> None:
+
+        if gathered_actions:
+
+            for action in gathered_actions:
+                self.__logger.debug(f"{action.message} ({action.name} -> {action.value} from {action.source})")
+                self.change(dry_run, action)
+        else:
+            self.__logger.debug("No actions desired by any of the providers")
 
     def actions_should_be_blocked(self, device_infos: DeviceInfos) -> bool:
 

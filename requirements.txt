@@ -4,6 +4,7 @@ matplotlib
 numpy
 pandas
 python-crontab
+python-dotenv
 pytz
 structlog
 tqdm
