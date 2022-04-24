@@ -27,17 +27,14 @@ def test_startup_flow_temperature_is_sensible(flow_temp, return_temp, outdoor_te
     device_infos = [{"FlowTemperature": flow_temp, "ReturnTemperature": return_temp, "OutdoorTemperature": outdoor_temp}]
 
     # Act
-    suggested_startup_temperature = ManageSpaceHeatingPower.sensible_startup_flow_temperature(datetime.datetime.utcnow(), device_infos)
+    calculation_moment = datetime.datetime.utcnow()
+    suggested_startup_temperature = ManageSpaceHeatingPower.sensible_startup_flow_temperature(calculation_moment, device_infos)
 
     # Assert
-    assert suggested_startup_temperature <= TemperatureThresholds.max_flow_temp(
-        datetime.datetime.utcnow(), device_infos
-    ), "The startup temp is higher than the maximum allowable flow temp"
+    assert suggested_startup_temperature <= TemperatureThresholds.max_flow_temp(calculation_moment, device_infos), "The startup temp is higher than the maximum allowable flow temp"
 
-    assert suggested_startup_temperature >= TemperatureThresholds.min_flow_temp(
-        datetime.datetime.utcnow(), device_infos
-    ), "The startup temp is lower than the minimum allowable flow temp"
+    assert suggested_startup_temperature >= TemperatureThresholds.min_flow_temp(calculation_moment, device_infos), "The startup temp is lower than the minimum allowable flow temp"
+
+    assert suggested_startup_temperature <= high, "The startup temp is higher than the upper boundary for this scenario"
 
     assert suggested_startup_temperature >= low, "The startup temp is lower than the lower boundary for this scenario"
-
-    assert high >= suggested_startup_temperature, "The startup temp is higher than the upper boundary for this scenario"
