@@ -1,2 +1,51 @@
+[build-system]
+requires = ["poetry_core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[options]
+packages = "find:"
+python_requires = ">=3.6"
+
+
+
+[tool.poetry]
+name = "heatpump-act"
+version = "0.1.1"
+description = "Scripts to act on a heatpump"
+license = "MIT"
+
+authors = [
+    "David Bowen <david@myforest.com>"
+]
+
+packages = [
+	 { include = "act" },
+]
+
+readme = "README.md"
+
+repository = "https://github.com/MyForest/heatpump-act"
+homepage = "https://github.com/MyForest/heatpump-act"
+
+[tool.poetry.dependencies]
+croniter = "*"
+python = ">=3.6.2"
+python-crontab = "*"
+python-dotenv = "*"
+pytz = "*"
+structlog = "*"
+tqdm = "*"
+typer = "*"
+urllib3 = "*"
+
+[tool.poetry.dev-dependencies]
+black = "*"
+mypy = "*"
+pylint = "*"
+pytest = "*"
+pytest-xdist = "*"
+types-croniter = "*"
+types-pytz = "*"
+
 [tool.black]
 line-length = 180

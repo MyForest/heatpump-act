@@ -2,64 +2,61 @@
 # See build.sh for how to run it
 
 # First of all, let's get a nice Python environment
-FROM python as core
+FROM python:3.9 as core
 
 RUN touch /tmp/one_ring_to_bind_them_all
 
 WORKDIR /app/
 
-COPY requirements.txt .
 
-RUN pip install -r requirements.txt && rm requirements.txt
+RUN curl -sSL https://install.python-poetry.org | python3 -
+ENV PATH="/root/.local/bin:$PATH"
+RUN poetry --version
+
+COPY pyproject.toml .
+COPY poetry.lock .
+
+RUN poetry install --no-root
 
 #-------------------
 FROM core as collect_source
 
 COPY act/*.py act/
-COPY act/log4j.properties act/
 
 #-------------------
 FROM core as check_types_make_sense
 
-RUN pip install mypy
 
 COPY --from=collect_source /app/act act
 
 COPY lint/ act/lint/
-RUN mypy -p act --config-file act/lint/mypy.ini
+RUN poetry run mypy -p act --config-file act/lint/mypy.ini
 
 COPY .pylintrc .
-RUN pylint act/
+RUN poetry run pylint act/
 
 #-------------------
 FROM core as check_formatting_is_reasonable
 
-RUN pip install black
-RUN pip list | grep black
-
-COPY pyproject.toml .
-
 COPY --from=collect_source /app/act act
 
-RUN black --version && black --check --diff act/
+RUN poetry run black --check --diff act/
 
 
 #-------------------
 FROM core as run_all_the_unit_tests
 
-RUN pip install pytest pytest-xdist
-
 COPY --from=collect_source /app/act act
 
 COPY test act/test
 
-RUN pytest --numprocesses=auto
+RUN poetry run pytest --numprocesses=auto
 
 
 #-------------------
 FROM collect_source as check_the_program_is_basically_functional
 
-RUN  python -m act.act --help | grep "heatpump"
+RUN poetry run python -m act.act --help | grep "heatpump"
 
 
 #-------------------
@@ -70,3 +67,6 @@ COPY --from=check_types_make_sense /tmp/one_ring_to_bind_them_all /tmp/
 COPY --from=check_formatting_is_reasonable /tmp/one_ring_to_bind_them_all /tmp/
 COPY --from=run_all_the_unit_tests /tmp/one_ring_to_bind_them_all /tmp/
 COPY --from=check_the_program_is_basically_functional /tmp/one_ring_to_bind_them_all /tmp/
+
+ENV PYTHONWARNINGS="ignore:Unverified HTTPS request"
+ENTRYPOINT ["poetry","run","python","-m","act.act","--dry-run" ]
