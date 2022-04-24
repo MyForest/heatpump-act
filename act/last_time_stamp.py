@@ -8,7 +8,7 @@ from .device_infos import DeviceInfo
 # --------------------------------------------------------------------------------
 class LastTimeStamp:
     @staticmethod
-    def lastTimeStampInUTC(deviceInfo: DeviceInfo) -> datetime.datetime:
+    def last_time_stamp_in_utc(deviceInfo: DeviceInfo) -> datetime.datetime:
         local_time_zone_moment = datetime.datetime.strptime(deviceInfo["LastTimeStamp"], "%Y-%m-%dT%H:%M:%S")
 
         local_time_zone = pytz.timezone("Europe/London")

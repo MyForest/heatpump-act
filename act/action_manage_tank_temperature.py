@@ -24,7 +24,7 @@ class ManageTankTemperature:
                 break
             latest_device_info = info
 
-        return LastTimeStamp.lastTimeStampInUTC(latest_device_info)
+        return LastTimeStamp.last_time_stamp_in_utc(latest_device_info)
 
     @staticmethod
     def __was_recently_heating_water(device_infos: DeviceInfos) -> bool:

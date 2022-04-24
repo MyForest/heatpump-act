@@ -11,6 +11,8 @@ import typer
 from act.action import Action
 from act.action_manage_tank_temperature import ManageTankTemperature
 from act.action_stop_forcing_hot_water import StopForcingHotWater
+from act.action_turn_off_power import TurnOffPower
+from act.action_turn_on_power import TurnOnPower
 from act.alter_setting import AlterSetting
 
 from act.device_infos import DeviceInfo, DeviceInfos
@@ -163,7 +165,7 @@ class Act:
 
     def gather_actions(self, calculation_moment: datetime.datetime, device_infos: DeviceInfos) -> Generator[Action, None, None]:
 
-        actionProviders = [StopForcingHotWater.stop_forcing_hot_water, ManageTankTemperature.manage_tank_temperature]
+        actionProviders = [TurnOffPower.turn_off_power, TurnOnPower.turn_on_power, StopForcingHotWater.stop_forcing_hot_water, ManageTankTemperature.manage_tank_temperature]
 
         for actionProvider in actionProviders:
             try:
@@ -192,7 +194,7 @@ class Act:
             pass
 
     def describe_device_infos_being_operated_on(self, device_infos):
-        self.__logger.debug(f"Device infos being used", size=len(device_infos), newest=LastTimeStamp.lastTimeStampInUTC(device_infos[-1]).isoformat())
+        self.__logger.debug(f"Device infos being used", size=len(device_infos), newest=LastTimeStamp.last_time_stamp_in_utc(device_infos[-1]).isoformat())
 
     def __getLatestDeviceInfos(self, calculationMoment: datetime.datetime) -> Generator[DeviceInfo, None, None]:
 
@@ -213,7 +215,7 @@ class Act:
                     except:
                         continue
 
-                    lastTimeStamp = LastTimeStamp.lastTimeStampInUTC(deviceInfo)
+                    lastTimeStamp = LastTimeStamp.last_time_stamp_in_utc(deviceInfo)
 
                     if lastTimeStamp <= calculationMoment:
 
