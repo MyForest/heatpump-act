@@ -3,11 +3,13 @@ import json
 import logging
 import os
 import sys
-from typing import Generator, Iterable, Optional
+from typing import Dict, Generator, Iterable
 
 import pytz
 import structlog
 import typer
+from act.action import Action
+from act.action_stop_forcing_hot_water import StopForcingHotWater
 
 from act.device_infos import DeviceInfo, DeviceInfos
 from act.effective_temperature import EffectiveTemperature
@@ -91,9 +93,8 @@ class Act:
 
             if not self.actions_should_be_blocked(device_infos):
                 self.__logger.info("Actions were not blocked")
-                # nonConflictingActions = self.getNonConflictingActions(local_dt, device_infos)
-
-                # self.performActions(dry_run, device_infos, list(nonConflictingActions))
+                nonConflictingActions = list(self.get_non_conflicting_actions(local_dt, device_infos))
+                self.__logger.debug("Non-conflicting actions", size=len(nonConflictingActions))
 
     def actions_should_be_blocked(self, device_infos: DeviceInfos) -> bool:
 
@@ -112,6 +113,49 @@ class Act:
                 self.__logger.debug(f"Predicate will not block actions", predicate=predicate.__name__)
 
         return False
+
+    def get_non_conflicting_actions(self, calculation_moment: datetime.datetime, device_infos: DeviceInfos) -> Generator[Action, None, None]:
+
+        gatheredActions = self.gather_actions(calculation_moment, device_infos)
+
+        actionsBySettingName: Dict = {}
+
+        for action in gatheredActions:
+            actionName = action.name
+            if actionName in actionsBySettingName:
+                newValue = action.value
+                otherNewValue = actionsBySettingName[actionName].value
+                if newValue != otherNewValue:
+                    raise Exception(
+                        f"There are multiple agents trying to alter {actionName} with values of {newValue} and {otherNewValue}. The messages are '{action.message}' and '{actionsBySettingName[action.name].message}'"
+                    )
+            else:
+                actionsBySettingName[action.name] = action
+                yield action
+
+    def gather_actions(self, calculation_moment: datetime.datetime, device_infos: DeviceInfos) -> Generator[Action, None, None]:
+
+        actionProviders = [
+            StopForcingHotWater.stop_forcing_hot_water,
+        ]
+
+        for actionProvider in actionProviders:
+            try:
+                generator = actionProvider(calculation_moment, device_infos)
+                if generator:
+                    actions = list(generator)
+                    if actions:
+                        for action in actions:
+                            action.source = actionProvider.__qualname__
+                            yield action
+                    else:
+                        self.__logger.debug(f"No actions desired", action=actionProvider.__qualname__)
+                else:
+                    self.__logger.debug(f"No actions desired", action=actionProvider.__qualname__)
+            except Exception as err:
+                self.__logger.debug(err)
+                # logging.error("Problem getting actions from " + actionProvider.__qualname__, err)
+                raise
 
     def __log_effective_temperature(self, calculationMoment: datetime.datetime):
         try:
