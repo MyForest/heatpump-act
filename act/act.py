@@ -10,13 +10,14 @@ import structlog
 import typer
 
 from act.device_infos import DeviceInfo
+from act.effective_temperature import EffectiveTemperature
 from act.last_time_stamp import LastTimeStamp
 
 
 class Act:
     def __init__(self) -> None:
         self.__configure__logging()
-        self.__logger = logger = structlog.get_logger(self.__class__.__name__)
+        self.__logger = structlog.get_logger(self.__class__.__name__)
 
     def __configure__logging(self):
 
@@ -83,6 +84,15 @@ class Act:
                 device_infos = device_infos[:-1]
 
             self.describe_device_infos_being_operated_on(device_infos)
+            self.__log_effective_temperature(local_dt)
+
+    def __log_effective_temperature(self, calculationMoment: datetime.datetime):
+        try:
+            effectiveOutdoorTemperature = EffectiveTemperature.apparent_temp(calculationMoment)
+            self.__logger.debug(f"The effective outdoor temperature is {effectiveOutdoorTemperature} °C")
+        except:
+            self.__logger.exception("Unable to get effective temp")
+            pass
 
     def describe_device_infos_being_operated_on(self, device_infos):
         self.__logger.debug(

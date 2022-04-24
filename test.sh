@@ -10,6 +10,6 @@ set -x
 docker run \
 --rm \
 -v ${STATE}:/state/:ro \
--v ${WEATHER}:${WEATHER}:ro \
+-v ${WEATHER}:/weather:ro \
 ${IMAGE} \
 python -m act.act --dry-run $@
