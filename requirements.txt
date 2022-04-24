@@ -1,0 +1,13 @@
+black
+croniter
+matplotlib
+numpy
+pandas
+python-crontab
+pytz
+structlog
+tqdm
+typer
+types-croniter
+types-pytz
+urllib3
