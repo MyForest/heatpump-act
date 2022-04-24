@@ -95,7 +95,7 @@ class TurnOnPower:
                 "Effective temperature comparison",
                 effective_temperature=effective_temperature,
                 outdoor_temperature=outdoor_temperature,
-                delta=effective_temperature - outdoor_temperature,
+                delta=round(effective_temperature - outdoor_temperature, 2),
             )
         except:
             structlog.get_logger().warning("Unable to get effective temperature", exception_type=sys.exc_info()[0], exception=sys.exc_info()[1])

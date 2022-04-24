@@ -9,6 +9,8 @@ import pytz
 import structlog
 import typer
 from act.action import Action
+from act.action_ensure_zone1_flow_temperature_is_correct import EnsureZone1FlowTemperatureIsCorrect
+from act.action_manage_power_state_for_space_heating import ManageSpaceHeatingPower
 from act.action_manage_tank_temperature import ManageTankTemperature
 from act.action_stop_forcing_hot_water import StopForcingHotWater
 from act.action_turn_off_power import TurnOffPower
@@ -29,11 +31,8 @@ class Act:
 
     def __configure__logging(self):
 
-        logging.basicConfig(
-            format="%(message)s",
-            stream=sys.stdout,
-            level=logging.DEBUG,
-        )
+        logging.basicConfig(format="%(message)s", stream=sys.stdout, level=logging.INFO)
+        logging.getLogger("act").setLevel(logging.DEBUG)
         structlog.configure(
             processors=[
                 structlog.processors.add_log_level,
@@ -41,7 +40,7 @@ class Act:
                 structlog.dev.set_exc_info,
                 structlog.processors.CallsiteParameterAdder([structlog.processors.CallsiteParameter.MODULE, structlog.processors.CallsiteParameter.FUNC_NAME]),
                 structlog.contextvars.merge_contextvars,
-                structlog.processors.TimeStamper(),
+                structlog.processors.TimeStamper("iso"),
                 structlog.dev.ConsoleRenderer(),
             ],
             wrapper_class=structlog.make_filtering_bound_logger(logging.NOTSET),
@@ -73,6 +72,7 @@ class Act:
         local_dt = local_time_zone.localize(calculation_moment_datetime)
 
         self.__logger.info(f"Calculation moment", calculation_moment=local_dt.isoformat())
+        self.__logger.info(f"Units", time="Seconds", temperature="Celsius", power="Watts")
         if dry_run:
             self.__logger.debug("Using dry run so will not send commands to heat pump")
 
@@ -86,7 +86,7 @@ class Act:
         utc_now = utc.localize(now)
 
         if (utc_now - local_dt).total_seconds() > 59:
-            logging.debug("Older runs would not have had access to the very latest device info when they ran")
+            structlog.get_logger().debug("Older runs would not have had access to the very latest device info when they ran")
             device_infos = device_infos[:-1]
 
         self.describe_device_infos_being_operated_on(device_infos)
@@ -106,7 +106,7 @@ class Act:
         if dryRun:
             prefix = "DRY RUN: "
 
-        self.__logger.info(f"{prefix} {action.message}")
+        self.__logger.info(f"{prefix}{action.message}")
 
         if not dryRun:
             AlterSetting().do(action.name, str(action.value), action.message, action.source, shoosh=True)
@@ -165,7 +165,14 @@ class Act:
 
     def gather_actions(self, calculation_moment: datetime.datetime, device_infos: DeviceInfos) -> Generator[Action, None, None]:
 
-        actionProviders = [TurnOffPower.turn_off_power, TurnOnPower.turn_on_power, StopForcingHotWater.stop_forcing_hot_water, ManageTankTemperature.manage_tank_temperature]
+        actionProviders = [
+            TurnOffPower.turn_off_power,
+            TurnOnPower.turn_on_power,
+            StopForcingHotWater.stop_forcing_hot_water,
+            ManageTankTemperature.manage_tank_temperature,
+            ManageSpaceHeatingPower.manage,
+            EnsureZone1FlowTemperatureIsCorrect.ensure_target_flow_temp_at_maximum,
+        ]
 
         for actionProvider in actionProviders:
             try:
@@ -188,7 +195,7 @@ class Act:
     def __log_effective_temperature(self, calculationMoment: datetime.datetime):
         try:
             effective_outdoor_temperature = EffectiveTemperature.apparent_temp(calculationMoment)
-            self.__logger.debug(f"Effective outdoor temperature in °C", effective_outdoor_temperature=effective_outdoor_temperature)
+            self.__logger.debug(f"Effective outdoor temperature", effective_outdoor_temperature=effective_outdoor_temperature)
         except:
             self.__logger.exception("Unable to get effective outdoor temperature")
             pass
