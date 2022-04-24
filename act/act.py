@@ -3,15 +3,17 @@ import json
 import logging
 import os
 import sys
-from typing import Generator
+from typing import Generator, Iterable, Optional
 
 import pytz
 import structlog
 import typer
 
-from act.device_infos import DeviceInfo
+from act.device_infos import DeviceInfo, DeviceInfos
 from act.effective_temperature import EffectiveTemperature
 from act.last_time_stamp import LastTimeStamp
+from act.predicate import Predicate
+from act.simple_checks import SimpleChecks
 
 
 class Act:
@@ -84,7 +86,32 @@ class Act:
                 device_infos = device_infos[:-1]
 
             self.describe_device_infos_being_operated_on(device_infos)
+
             self.__log_effective_temperature(local_dt)
+
+            if not self.actions_should_be_blocked(device_infos):
+                self.__logger.info("Actions were not blocked")
+                # nonConflictingActions = self.getNonConflictingActions(local_dt, device_infos)
+
+                # self.performActions(dry_run, device_infos, list(nonConflictingActions))
+
+    def actions_should_be_blocked(self, device_infos: DeviceInfos) -> bool:
+
+        blockers: Iterable[Predicate[DeviceInfos]] = [
+            SimpleChecks.is_holiday_mode_on,
+            SimpleChecks.is_defrost_mode_on,
+            SimpleChecks.is_heatpump_offline,
+            SimpleChecks.are_device_infos_missing,
+        ]
+
+        for predicate in blockers:
+            if predicate(device_infos):
+                self.__logger.info(f"Predicate blocked actions", predicate=predicate.__name__)
+                return True
+            else:
+                self.__logger.debug(f"Predicate will not block actions", predicate=predicate.__name__)
+
+        return False
 
     def __log_effective_temperature(self, calculationMoment: datetime.datetime):
         try:
