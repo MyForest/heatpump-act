@@ -29,6 +29,12 @@ class Act:
         Act.__configure_logging()
         self.__logger = structlog.get_logger(self.__class__.__name__)
 
+    def trigger_code_ql(self):
+        if True:
+            pass
+        else:
+            raise Exception("Should not get here")
+
     @staticmethod
     def __configure_logging():
 
