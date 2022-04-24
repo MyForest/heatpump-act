@@ -1,7 +1,7 @@
 import json
 import os
 from datetime import datetime
-from typing import Any
+from typing import Any, Union
 
 import structlog
 import typer
@@ -71,7 +71,7 @@ class AlterSetting:
         self.send_update_to_melcloud(name, value, message, source, shoosh)
 
     # --------------------------------------------------------------------------------
-    def send_update_to_melcloud(self, name: str, value: str | float, message: str, source: str, shoosh: bool = False) -> None:
+    def send_update_to_melcloud(self, name: str, value: Union[str, int], message: str, source: str, shoosh: bool = False) -> None:
 
         self.record_action(name, value, message, source)
 
