@@ -476,7 +476,7 @@ test = ["shellingham (>=1.3.0,<2.0.0)", "pytest (>=4.4.0,<5.4.0)", "pytest-cov (
 
 [[package]]
 name = "types-croniter"
-version = "1.0.9"
+version = "1.0.10"
 description = "Typing stubs for croniter"
 category = "dev"
 optional = false
@@ -788,8 +788,8 @@ typer = [
     {file = "typer-0.4.1.tar.gz", hash = "sha256:5646aef0d936b2c761a10393f0384ee6b5c7fe0bb3e5cd710b17134ca1d99cff"},
 ]
 types-croniter = [
-    {file = "types-croniter-1.0.9.tar.gz", hash = "sha256:b8f4d19dd3f47c4f5f19f7e449b284616408f726e4bb6ba34a61e3291552bc97"},
-    {file = "types_croniter-1.0.9-py3-none-any.whl", hash = "sha256:9b265f70968c1ea47c907c97f7f2141c7fe3cce2044a2e5f39bc2577ba5a5a7e"},
+    {file = "types-croniter-1.0.10.tar.gz", hash = "sha256:10ae27340a37952b9ac67d7d2fc3bc9d4d88b6ae2c7b5a0b2c393b24d0a21ce0"},
+    {file = "types_croniter-1.0.10-py3-none-any.whl", hash = "sha256:3ae500135d4d6ccc5a4e54a4c9b971fcbe98b5f0970ee2987f7ad60e77b3f95f"},
 ]
 types-pytz = [
     {file = "types-pytz-2021.3.7.tar.gz", hash = "sha256:11d5ba06268167953ccc4a3eee192c24b42d00d2aef456c160a8798893cb2081"},
