@@ -8,4 +8,4 @@ A lot of discussion relating to this can be found on the [OpenEnergyMonitor Comm
 
 ## PyPI
 
-This project is infrquently released to [heatpump-act](https://pypi.org/project/heatpump-act/).
+This project is infrequently released to [heatpump-act](https://pypi.org/project/heatpump-act/).
