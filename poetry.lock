@@ -729,14 +729,14 @@ test = ["black (>=22.3.0,<23.0.0)", "coverage (>=6.2,<7.0)", "isort (>=5.0.6,<6.
 
 [[package]]
 name = "types-croniter"
-version = "1.3.2.3"
+version = "1.3.2.5"
 description = "Typing stubs for croniter"
 category = "dev"
 optional = false
 python-versions = "*"
 files = [
-    {file = "types-croniter-1.3.2.3.tar.gz", hash = "sha256:60fb02c85514050d9773e1b467213d0ab37c9fc3c9fc39081cd8b33346fc502a"},
-    {file = "types_croniter-1.3.2.3-py3-none-any.whl", hash = "sha256:e62375bfc31f816fad580cd17e462a0cd485470c9a61e3d4a46bad4a7b02d04d"},
+    {file = "types-croniter-1.3.2.5.tar.gz", hash = "sha256:d482c50efc2ff8bfac1033ac510a0e8deace17d9d21436ec6113c6c0c061c21b"},
+    {file = "types_croniter-1.3.2.5-py3-none-any.whl", hash = "sha256:afae01535de130cc348254e9f8e5021e4e742c2313fcde16267f204511c3f324"},
 ]
 
 [[package]]
