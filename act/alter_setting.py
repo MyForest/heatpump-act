@@ -16,6 +16,10 @@ class AlterSetting:
         self.__logger = structlog.get_logger(self.__class__.__name__)
 
     def record_action(self, name: str, value: Any, message: str, source: str) -> None:
+        
+        if not os.path.exists("/state"):
+            return
+        
         effective_moment = datetime.utcnow()
         actions_folder = os.path.join(
             "/state",
