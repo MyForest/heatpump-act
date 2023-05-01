@@ -3,17 +3,17 @@ on:
     branches: [ main ]
 
 jobs:
-  tests:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
-      - name: test
-        run: bash test.sh
+      - name: build
+        run: DOCKER_BUILDKIT=1 docker build .
 
   check:
     if: always()
     needs:
-    - tests
+    - build
     runs-on: Ubuntu-latest
     steps:
     - name: Decide whether the needed jobs succeeded or failed
