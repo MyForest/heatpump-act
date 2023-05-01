@@ -16,7 +16,6 @@ from .state_change import StateChange
 class TurnOnPower:
     @staticmethod
     def turn_on_power(calculation_moment: datetime.datetime, device_infos: DeviceInfos) -> Generator[Action, None, None]:
-
         current_power = device_infos[-1]["Power"]
 
         structlog.get_logger().debug("Current power state", current_power=current_power)
@@ -28,7 +27,6 @@ class TurnOnPower:
 
     @staticmethod
     def should_turn_on_power(calculation_moment: datetime.datetime, device_infos: DeviceInfos) -> Optional[str]:
-
         if not Covid.can_be_powered_off(calculation_moment, device_infos):
             return "COVID mode indicates we need the heating on"
 
@@ -85,7 +83,6 @@ class TurnOnPower:
         calculation_moment: datetime.datetime,
         device_infos: DeviceInfos,
     ) -> Optional[str]:
-
         outdoor_temperature = float(device_infos[-1]["OutdoorTemperature"])
         effective_temperature = outdoor_temperature
         # Can we get a better temperature?
@@ -117,7 +114,6 @@ class TurnOnPower:
     def should_room_temperature_turn_it_on(
         device_infos: DeviceInfos,
     ) -> Optional[str]:
-
         room_temperature = float(device_infos[-1]["RoomTemperatureZone1"])
 
         too_cold = 10

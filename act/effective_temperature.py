@@ -40,7 +40,6 @@ class EffectiveTemperature:
             help="Run as though it is this UTC moment in ISO8601 format.",
         ),
     ) -> float:
-
         stats = EffectiveTemperature.interesting_statistics(calculation_moment)
 
         # https://pywws.readthedocs.io/en/latest/_modules/pywws/conversions.html#wind_chill

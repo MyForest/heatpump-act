@@ -14,7 +14,6 @@ class StopForcingHotWater:
         calculation_moment: datetime.datetime,
         device_infos: DeviceInfos,
     ) -> Generator[Action, None, None]:
-
         device_info = device_infos[-1]
 
         if not device_info["ForcedHotWaterMode"]:
@@ -24,7 +23,6 @@ class StopForcingHotWater:
         current_target = float(device_info["SetTankWaterTemperature"])
 
         if tank_temp >= current_target:
-
             yield Action(
                 "ForcedHotWaterMode",
                 False,

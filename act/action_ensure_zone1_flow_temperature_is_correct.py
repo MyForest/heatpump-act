@@ -40,7 +40,6 @@ class EnsureZone1FlowTemperatureIsCorrect:
             # We're certainly going to be in an on-off cycle. The off cycles might be an hour or more
             new_target_temperature = max_flow_temp
         else:
-
             previous_event = device_infos[-2]
             if previous_event["DefrostMode"]:
                 reason = "which is a lower target flow temp to keep us efficient as we just came off a defrost"
@@ -104,7 +103,6 @@ class EnsureZone1FlowTemperatureIsCorrect:
 
     @staticmethod
     def __gently_increase_target_temperature(calculation_moment: datetime.datetime, device_infos) -> float:
-
         latest_device_info = device_infos[-1]
         current_target_temperature = float(latest_device_info["TargetHCTemperatureZone1"])
 
@@ -134,7 +132,6 @@ class EnsureZone1FlowTemperatureIsCorrect:
                         + " °C"
                     )
                 else:
-
                     # It's winding down because the flow is warm enough
                     # If we've bumped up the target recently then give it another iteration to catch up
                     if current_target_temperature > device_infos[-2]["TargetHCTemperatureZone1"] or current_target_temperature > device_infos[-3]["TargetHCTemperatureZone1"]:

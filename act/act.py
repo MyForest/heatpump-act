@@ -31,7 +31,6 @@ class Act:
 
     @staticmethod
     def __configure_logging():
-
         logging.basicConfig(format="%(message)s", stream=sys.stdout, level=logging.INFO)
         logging.getLogger("act").setLevel(logging.DEBUG)
         structlog.configure(
@@ -102,7 +101,6 @@ class Act:
             self.perform_actions(dry_run, device_infos, non_conflicting_actions)
 
     def change(self, dry_run: bool, action: Action):
-
         prefix = ""
         if dry_run:
             prefix = "DRY RUN: "
@@ -118,9 +116,7 @@ class Act:
         device_infos: DeviceInfos,
         gathered_actions: List[Action],
     ) -> None:
-
         if gathered_actions:
-
             for action in gathered_actions:
                 self.__logger.debug(f"{action.message} ({action.name} -> {action.value} from {action.source})")
                 self.change(dry_run, action)
@@ -128,7 +124,6 @@ class Act:
             self.__logger.debug("No actions desired by any of the providers")
 
     def actions_should_be_blocked(self, device_infos: DeviceInfos) -> bool:
-
         blockers: Iterable[Predicate[DeviceInfos]] = [
             SimpleChecks.is_holiday_mode_on,
             SimpleChecks.is_defrost_mode_on,
@@ -146,7 +141,6 @@ class Act:
         return False
 
     def get_non_conflicting_actions(self, calculation_moment: datetime.datetime, device_infos: DeviceInfos) -> Generator[Action, None, None]:
-
         gathered_actions = self.gather_actions(calculation_moment, device_infos)
 
         actions_by_setting_name: Dict = {}
@@ -166,7 +160,6 @@ class Act:
                 yield action
 
     def gather_actions(self, calculation_moment: datetime.datetime, device_infos: DeviceInfos) -> Generator[Action, None, None]:
-
         action_providers = [
             TurnOffPower.turn_off_power,
             TurnOnPower.turn_on_power,
@@ -205,7 +198,6 @@ class Act:
         self.__logger.debug("Device infos being used", size=len(device_infos), newest=LastTimeStamp.last_time_stamp_in_utc(device_infos[-1]).isoformat())
 
     def __get_latest_device_infos(self, calculation_moment: datetime.datetime) -> Generator[DeviceInfo, None, None]:
-
         yield_counter = 600
 
         devices_folder = os.path.join("/state", "downloads", "raw")
@@ -226,7 +218,6 @@ class Act:
                     last_time_stamp = LastTimeStamp.last_time_stamp_in_utc(device_info)
 
                     if last_time_stamp <= calculation_moment:
-
                         try:
                             del device_info["ListHistory24Formatters"]
                         except:

@@ -2,6 +2,7 @@ import datetime
 
 from .device_infos import DeviceInfos
 
+
 # --------------------------------------------------------------------------------
 class OctopusGo:
     @staticmethod

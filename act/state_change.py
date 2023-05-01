@@ -23,7 +23,6 @@ class StateChange:
 
     @staticmethod
     def last_heating(device_infos: DeviceInfos) -> Optional[datetime.datetime]:
-
         for device_info in reversed(device_infos):
             if device_info.get("HeatPumpFrequency"):
                 if "LastTimeStamp" in device_info:

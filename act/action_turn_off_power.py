@@ -13,7 +13,6 @@ from .temperature_thresholds import TemperatureThresholds
 class TurnOffPower:
     @staticmethod
     def turn_off_power(calculation_moment: datetime.datetime, device_infos: DeviceInfos) -> Generator[Action, None, None]:
-
         latest_device_info = device_infos[-1]
 
         if not latest_device_info["Power"]:

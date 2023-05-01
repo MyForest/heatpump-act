@@ -15,7 +15,6 @@ from .temperature_thresholds import TemperatureThresholds
 class ManageTankTemperature:
     @staticmethod
     def __when_was_target_set_above_threshold(device_infos: DeviceInfos, threshold: float) -> datetime.datetime:
-
         # Default to something
         latest_device_info = device_infos[-1]
 
@@ -28,7 +27,6 @@ class ManageTankTemperature:
 
     @staticmethod
     def __was_recently_heating_water(device_infos: DeviceInfos) -> bool:
-
         # Even if not forced, we are willing to let it carry on if it's getting hotter
         hot_water_energy_used = sum([device_info["HotWaterEnergyConsumedRate1"] for device_info in device_infos])
 
@@ -39,12 +37,10 @@ class ManageTankTemperature:
         calculation_moment: datetime.datetime,
         device_infos: DeviceInfos,
     ) -> Generator[Action, None, None]:
-
         latest_device_info = device_infos[-1]
 
         current_target = float(latest_device_info["SetTankWaterTemperature"])
         if current_target >= TemperatureThresholds.shutdown_water_at_this_temperature():
-
             # Let's see if we should override this high temp
             batch_size = 10
             last_batch_targets = [float(device_info["SetTankWaterTemperature"]) for device_info in device_infos[-batch_size:]]
@@ -54,7 +50,6 @@ class ManageTankTemperature:
             when_was_target_set = ManageTankTemperature.__when_was_target_set_above_threshold(device_infos, TemperatureThresholds.legionella_tank_set_temp())
 
             if mean_tank_temperature >= TemperatureThresholds.shutdown_water_at_this_temperature():
-
                 if ManageTankTemperature.__was_recently_heating_water(device_infos[-batch_size:]):
                     structlog.get_logger().debug("Water has been heated in the last batch of cycles so leaving it alone", batch_size=batch_size)
                     return

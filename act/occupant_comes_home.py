@@ -11,7 +11,6 @@ class OccupantComesHome:
         calculation_moment: datetime.datetime,
         device_infos: DeviceInfos,
     ) -> bool:
-
         device_info = device_infos[-1]
 
         outdoor_temperature = device_info["OutdoorTemperature"]
@@ -25,7 +24,6 @@ class OccupantComesHome:
 
         if calculation_moment.weekday() < 5:
             if (calculation_moment.hour == 16) and calculation_moment.minute > 30 and calculation_moment.minute < 59:
-
                 return_temperature = float(device_info["ReturnTemperature"])
 
                 desired = 28

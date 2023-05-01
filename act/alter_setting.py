@@ -10,16 +10,16 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+
 # --------------------------------------------------------------------------------
 class AlterSetting:
     def __init__(self) -> None:
         self.__logger = structlog.get_logger(self.__class__.__name__)
 
     def record_action(self, name: str, value: Any, message: str, source: str) -> None:
-        
         if not os.path.exists("/state"):
             return
-        
+
         effective_moment = datetime.utcnow()
         actions_folder = os.path.join(
             "/state",
@@ -76,7 +76,6 @@ class AlterSetting:
 
     # --------------------------------------------------------------------------------
     def send_update_to_melcloud(self, name: str, value: Union[str, int], message: str, source: str, shoosh: bool = False) -> None:
-
         self.record_action(name, value, message, source)
 
         http = urllib3.PoolManager()
@@ -153,7 +152,6 @@ class AlterSetting:
     # --------------------------------------------------------------------------------
     @staticmethod
     def validate_settings(update_gram):
-
         # MINIMUM_ATW_SET_TEMPERATURE: 10,
         # MAXIMUM_ATW_SET_TEMPERATURE: 30,
 

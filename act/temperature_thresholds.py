@@ -7,7 +7,6 @@ from .effective_temperature import EffectiveTemperature
 class TemperatureThresholds:
     @staticmethod
     def average_outdoor_temperature(device_infos: DeviceInfos) -> float:
-
         recent_device_infos = device_infos[-10:]
 
         total = sum([float(deviceInfo["OutdoorTemperature"]) for deviceInfo in recent_device_infos])
@@ -15,7 +14,6 @@ class TemperatureThresholds:
 
     @staticmethod
     def max_flow_temp(calculation_moment: datetime.datetime, device_infos: DeviceInfos) -> float:
-
         effective_outdoor_temperature = device_infos[-1]["OutdoorTemperature"]
         try:
             effective_outdoor_temperature = EffectiveTemperature.apparent_temp(calculation_moment)
@@ -48,7 +46,6 @@ class TemperatureThresholds:
 
     @staticmethod
     def min_flow_temp(calculation_moment: datetime.datetime, device_infos: DeviceInfos) -> float:
-
         effective_outdoor_temperature = device_infos[-1]["OutdoorTemperature"]
         try:
             effective_outdoor_temperature = EffectiveTemperature.apparent_temp(calculation_moment)

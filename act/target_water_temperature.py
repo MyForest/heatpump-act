@@ -55,7 +55,6 @@ class TargetWaterTemperature:
 
     @staticmethod
     def increase_tank_temperature_if_it_is_cold_outside(calculation_moment: datetime.datetime, device_infos: DeviceInfos) -> float:
-
         # It's tempting to say "if it's cold now then make the target temp higher so the humans are warmer in the shower"
         # but that will cause it to be more likely to come on when it's cold during the night when it's inefficient and humans aren't using it anyway
         # You really want a "will the air be cold when the humans shower" but for that you'd need a weather forecast and to know when they might shower
@@ -75,7 +74,6 @@ class TargetWaterTemperature:
 
     @staticmethod
     def target_tank_temperature(calculation_moment: datetime.datetime, device_infos: DeviceInfos) -> float:
-
         desired_water_temperature = TemperatureThresholds.nice_shower_water_temp_in_summer()
 
         desired_water_temperature += TargetWaterTemperature.increase_tank_temperature_if_it_is_cold_outside(calculation_moment, device_infos)

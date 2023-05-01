@@ -9,7 +9,6 @@ from .effective_temperature import EffectiveTemperature
 class Dwell:
     @staticmethod
     def turn_off_dwell(calculation_moment: datetime.datetime, device_infos: DeviceInfos) -> float:
-
         latest_device_info = device_infos[-1]
 
         outdoor_temperature = float(latest_device_info["OutdoorTemperature"])
@@ -22,7 +21,6 @@ class Dwell:
 
     @staticmethod
     def turn_off_dwell_from_temperature(temperature: float) -> float:
-
         dwell_time = 500.0
 
         # Reduce dwell time according to how warm it is
@@ -36,7 +34,6 @@ class Dwell:
 
     @staticmethod
     def turn_on_dwell(calculation_moment: datetime.datetime, device_infos: DeviceInfos) -> float:
-
         outdoor_temperature = float(device_infos[-1]["OutdoorTemperature"])
         try:
             outdoor_temperature = EffectiveTemperature.apparent_temp(calculation_moment)

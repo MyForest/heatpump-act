@@ -39,7 +39,6 @@ class Schedule:
 
     @staticmethod
     def next_job_moment(moment: datetime.datetime, job_name: str) -> Optional[datetime.datetime]:
-
         file_cron = CronTab(tab=Schedule.crontab())
 
         jobs = file_cron.find_command(job_name)
@@ -66,7 +65,6 @@ class Schedule:
 
     @staticmethod
     def recent_job_moment(moment: datetime.datetime, job_name: str, time_window=300) -> Optional[datetime.datetime]:
-
         file_cron = CronTab(tab=Schedule.crontab())
 
         jobs = file_cron.find_command(job_name)
@@ -81,7 +79,6 @@ class Schedule:
 
     @staticmethod
     def previous_job(moment: datetime.datetime) -> str:
-
         old_moment = datetime.datetime.min
         utc = pytz.timezone("UTC")
         old_moment = utc.localize(old_moment)

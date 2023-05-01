@@ -17,7 +17,6 @@ class Covid:
         calculation_moment: datetime.datetime,
         device_infos: DeviceInfos,
     ) -> Generator[Action, None, None]:
-
         latest_device_info = device_infos[-1]
 
         current_tank_temperature = float(latest_device_info["TankWaterTemperature"])
@@ -79,7 +78,6 @@ class Covid:
         calculation_moment: datetime.datetime,
         device_infos: DeviceInfos,
     ) -> Generator[Action, None, None]:
-
         latest_device_info = device_infos[-1]
 
         if not latest_device_info["Power"]:

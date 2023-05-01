@@ -7,11 +7,12 @@ import urllib3
 from dotenv import load_dotenv
 
 load_dotenv()
+
+
 # --------------------------------------------------------------------------------
 class EmonCMS:
     @staticmethod
     def get_feed_values(feed_id: int, moment: datetime.datetime = datetime.datetime.utcnow(), duration: int = 300, interval: int = 10):
-
         http = urllib3.PoolManager()
 
         start = (moment.timestamp() - duration) * 1000

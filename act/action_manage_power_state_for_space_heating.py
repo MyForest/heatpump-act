@@ -20,11 +20,11 @@ from .temperature_thresholds import TemperatureThresholds
 
 load_dotenv()
 
+
 # --------------------------------------------------------------------------------
 class ManageSpaceHeatingPower:
     @staticmethod
     def manage(calculation_moment: datetime.datetime, device_infos: DeviceInfos) -> Generator[Action, None, None]:
-
         device_info = device_infos[-1]
 
         if device_info["ForcedHotWaterMode"]:
@@ -58,7 +58,6 @@ class ManageSpaceHeatingPower:
             structlog.get_logger().debug("Determining if we should turn on")
             reason = ManageSpaceHeatingPower.reason_we_should_turn_on(calculation_moment, device_infos)
             if reason:
-
                 new_target_temperature = ManageSpaceHeatingPower.sensible_startup_flow_temperature(calculation_moment, device_infos)
 
                 yield Action(
@@ -94,7 +93,6 @@ class ManageSpaceHeatingPower:
         calculation_moment: datetime.datetime,
         device_infos: DeviceInfos,
     ) -> float:
-
         latest_device_info = device_infos[-1]
 
         if latest_device_info["OutdoorTemperature"] > 9:
@@ -136,7 +134,6 @@ class ManageSpaceHeatingPower:
 
     @staticmethod
     def warm_up_tank(calculation_moment: datetime.datetime, device_infos: DeviceInfos) -> Optional[str]:
-
         tank_temperature_below_which_we_should_heat_water = TargetWaterTemperature.tank_temperature_to_trigger_hot_water(calculation_moment, device_infos)
         desired_temp = TargetWaterTemperature.target_tank_temperature(calculation_moment, device_infos)
 
@@ -161,7 +158,6 @@ class ManageSpaceHeatingPower:
 
     @staticmethod
     def reason_we_should_turn_off(calculation_moment: datetime.datetime, device_infos: DeviceInfos) -> Optional[str]:
-
         try:
             structlog.get_logger().debug("Working out if turning off should be blocked because we should be turning on")
             reason_to_be_on = TurnOnPower.should_turn_on_power(calculation_moment, device_infos)
@@ -243,7 +239,6 @@ class ManageSpaceHeatingPower:
 
     @staticmethod
     def is_plenty_warm_enough(calculation_moment: datetime.datetime, device_infos: DeviceInfos) -> Optional[str]:
-
         if len(device_infos) < 2:
             return None
 
@@ -288,7 +283,6 @@ class ManageSpaceHeatingPower:
 
     @staticmethod
     def is_plenty_sunny_enough(calculation_moment: datetime.datetime, device_infos: DeviceInfos) -> bool:
-
         solar_reading = EmonCMS.get_feed_value(int(os.environ["EMONCMS_SOLAR_FEED_ID"]), calculation_moment)
         solar_power_in_watts = solar_reading["value"]
 
@@ -313,7 +307,6 @@ class ManageSpaceHeatingPower:
 
     @staticmethod
     def reason_we_should_turn_on(calculation_moment: datetime.datetime, device_infos: DeviceInfos) -> Optional[str]:
-
         if OccupantComesHome.needs_to_be_warmer(calculation_moment, device_infos):
             return "Needs to be warm for occupant coming home"
 
@@ -358,7 +351,6 @@ class ManageSpaceHeatingPower:
         if has_been_cold:
             structlog.get_logger().info(f"It has been cold enough to turn on the heating{flow_info}")
         else:
-
             if cold_infos:
                 has_been_old_duration = (calculation_moment - LastTimeStamp.last_time_stamp_in_utc(cold_infos[0])).total_seconds()
 
@@ -389,7 +381,6 @@ class ManageSpaceHeatingPower:
 
     @staticmethod
     def when_will_it_be_cold_enough_to_turn_on(calculation_moment: datetime.datetime, device_infos: DeviceInfos, min_temp: float) -> Optional[datetime.datetime]:
-
         last_on = ManageSpaceHeatingPower.when_was_heating_last_on(device_infos)
         if last_on:
             structlog.get_logger().debug("Heat pump was last on", last_on=last_on)
@@ -427,7 +418,6 @@ class ManageSpaceHeatingPower:
 
     @staticmethod
     def when_was_heating_last_on(device_infos: DeviceInfos) -> Optional[datetime.datetime]:
-
         for device_info in reversed(device_infos):
             if device_info["OperationMode"]:
                 return LastTimeStamp.last_time_stamp_in_utc(device_info)
