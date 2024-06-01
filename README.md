@@ -1,3 +1,6 @@
+**This repository is unmaintained.**
+----
+
 # myforest/heatpump-act
 
 A set of scripts to determine what actions we should request the heatpump to perform.
